@@ -1,19 +1,12 @@
 package com.Akoot.servertools;
 
-import java.beans.ConstructorProperties;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Scanner;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.Akoot.cthulhu.util.CthFile;
 
@@ -85,25 +78,6 @@ public class ServerTools
 		return instance;
 	}
 
-	public static int runProcess(File workDir, String... command) throws Exception
-	{
-		ProcessBuilder pb = new ProcessBuilder(command);
-		pb.directory(workDir);
-		pb.environment().put("JAVA_HOME", System.getProperty("java.home"));
-		Process ps = pb.start();
-
-		new Thread(new StreamRedirector(ps.getInputStream(), System.out)).start();
-		new Thread(new StreamRedirector(System.in, new PrintStream(ps.getOutputStream()))).start();
-		new Thread(new StreamRedirector(ps.getErrorStream(), System.err)).start();
-
-		int status = ps.waitFor();
-		if (status != 0)
-		{
-			throw new RuntimeException("Error running command, return status != 0: " + Arrays.toString(command));
-		}
-		return status;
-	}
-
 	public static boolean isWindows()
 	{
 		return System.getProperty("os.name").toLowerCase().contains("windows");
@@ -114,41 +88,21 @@ public class ServerTools
 		instance = new ServerTools(new RunConfiguration(args));
 	}
 
-	private static class StreamRedirector
-	implements Runnable
+	public static int runProcess(File workDir, String... command) throws Exception
 	{
-		private final InputStream stdout;
-		private final OutputStream stdin;
+		ProcessBuilder pb = new ProcessBuilder(command);
+		pb.directory(workDir);
+		pb.environment().put("JAVA_HOME", System.getProperty("java.home"));
+		Process ps = pb.start();
 
-		@ConstructorProperties({"in", "out"})
-		public StreamRedirector(InputStream stdout, OutputStream stdin)
-		{
-			this.stdin = stdin;
-			this.stdout = stdout;
-		}
+		IOUtils.copy(ps.getInputStream(), System.out);
 
-		@Override
-		public void run()
+		int status = ps.waitFor();
+
+		if (status != 0)
 		{
-			BufferedReader reader = new BufferedReader(new InputStreamReader(this.stdout));
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stdin));
-			try
-			{
-		        Scanner scanner = new Scanner(stdout);
-		        while (scanner.hasNextLine())
-		        {
-		            System.out.println(scanner.nextLine());
-		            String line;
-			        while((line = reader.readLine()) != null)
-			        {
-			        	writer.write(line);
-			        }
-		        }
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
+			throw new RuntimeException("Error running command, return status != 0: " + Arrays.toString(command));
 		}
+		return status;
 	}
 }
