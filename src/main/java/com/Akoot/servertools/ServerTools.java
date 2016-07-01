@@ -2,10 +2,13 @@ package com.Akoot.servertools;
 
 import java.beans.ConstructorProperties;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -96,11 +99,11 @@ public class ServerTools
 		int status = ps.waitFor();
 		if (status != 0)
 		{
-			throw new RuntimeException("Error running command, return status !=0: " + Arrays.toString(command));
+			throw new RuntimeException("Error running command, return status != 0: " + Arrays.toString(command));
 		}
 		return status;
 	}
-	
+
 	public static boolean isWindows()
 	{
 		return System.getProperty("os.name").toLowerCase().contains("windows");
@@ -114,27 +117,33 @@ public class ServerTools
 	private static class StreamRedirector
 	implements Runnable
 	{
-		private final InputStream in;
-		private final PrintStream out;
+		private final InputStream stdout;
+		private final OutputStream stdin;
 
 		@ConstructorProperties({"in", "out"})
-		public StreamRedirector(InputStream in, PrintStream out)
+		public StreamRedirector(InputStream stdout, OutputStream stdin)
 		{
-			this.in = in;
-			this.out = out;
+			this.stdin = stdin;
+			this.stdout = stdout;
 		}
 
 		@Override
 		public void run()
 		{
-			BufferedReader br = new BufferedReader(new InputStreamReader(this.in));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(this.stdout));
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(stdin));
 			try
 			{
-				String line;
-				while ((line = br.readLine()) != null)
-				{
-					this.out.println(line);
-				}
+		        Scanner scanner = new Scanner(stdout);
+		        while (scanner.hasNextLine())
+		        {
+		            System.out.println(scanner.nextLine());
+		            String line;
+			        while((line = reader.readLine()) != null)
+			        {
+			        	writer.write(line);
+			        }
+		        }
 			}
 			catch (IOException e)
 			{

@@ -1,0 +1,14 @@
+# Available types: VANILLA, SPIGOT, BUKKIT
+server-type: VANILLA
+minecraft-version: "1.10.2"
+
+# Change the directories in which worlds and plugins will be saved and read from
+# (Some plugins don't like this, Use this at your own risk!)
+plugins-directory: "run/416-vanilla"
+worlds-directory: "run/416-vanilla"
+
+# The minimum (starting) amount of ram for the server
+minimum-ram: 1024
+# The maximum amount of ram the server is allowed to use
+maximum-ram: 1024
+# (Multiply ram in GB by 1024 to get ram in MB)

@@ -36,7 +36,6 @@ public class Builder
 				System.out.println("Moving source jars...");
 				FileUtils.moveFileToDirectory(new File(buildToolsDirectory, "craftbukkit-" + minecraftVersion + ".jar"), jarsDirectory, true);
 				FileUtils.moveFileToDirectory(new File(buildToolsDirectory, "spigot-" + minecraftVersion + ".jar"), jarsDirectory, true);
-				System.out.println("Done.");
 			}
 		}
 		catch (Exception e)
@@ -51,7 +50,6 @@ public class Builder
 		{
 			URL downloadURL = new URL(String.format("https://s3.amazonaws.com/Minecraft.Download/versions/%s/minecraft_server.%s.jar", minecraftVersion, minecraftVersion));
 			FileUtils.copyURLToFile(downloadURL, getJar());
-			System.out.println("Done.");
 		}
 		catch (IOException e)
 		{

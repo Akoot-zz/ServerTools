@@ -56,7 +56,7 @@ public class Server
 		this.minRam = config.getInt("minimum-ram");
 		this.maxRam = config.getInt("maximum-ram");
 		this.serverJar = new File(serverFolder, type.value + "-" + minecraftVersion + ".jar");
-		this.serverLauncher = new CthFile(serverFolder, ServerTools.isWindows() ? "launch.bat" : "launch");
+		this.serverLauncher = new CthFile(serverFolder, ServerTools.isWindows() ? "launch.bat" : "launch.sh");
 		if(!serverLauncher.exists())
 		{
 			serverLauncher.create();
@@ -128,8 +128,10 @@ public class Server
 	{
 		try
 		{
-			String command = ServerTools.isWindows() ? serverLauncher.getName() : "./" + serverLauncher.getName();
-			if(ServerTools.runProcess(serverFolder, new String[] {command}) == 0)
+//			String[] args;
+//			if(ServerTools.isWindows()) args = new String[] {serverLauncher.getName()};
+//			else args = new String[] {"bash", "-c", serverLauncher.getName()};
+			if(ServerTools.runProcess(serverFolder, getProgramArgs()) == 0)
 			{
 				System.out.println("Looks like everything ran smoothly!");
 			}

@@ -14,12 +14,12 @@ public class CthFile extends File
 
 	public CthFile(String fileName)
 	{
-		super((fileName.contains(".") ? fileName : fileName + ".cth"));
+		super(fileName);
 	}
 
 	public CthFile(File parent, String fileName)
 	{
-		super(parent, (fileName.contains(".") ? fileName : fileName + ".cth"));
+		super(parent, fileName);
 	}
 
 	private void trace(String msg, Object... format)
