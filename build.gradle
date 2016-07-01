@@ -1,0 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+project.version = '0.0.1'
+
+repositories {
+    mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
+
+dependencies {
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'commons-io:commons-io:2.5'
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'com.Akoot.servertools.ServerTools'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
