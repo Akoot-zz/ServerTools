@@ -1,0 +1,13 @@
+# gradle
+/build/
+/.gradle/
+
+# eclipse
+/bin/
+/.settings/
+/.classpath
+/.project
+
+# custom
+/run/
+*.sh

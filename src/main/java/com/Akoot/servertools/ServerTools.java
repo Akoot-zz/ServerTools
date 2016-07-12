@@ -2,13 +2,16 @@ package com.Akoot.servertools;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Scanner;
+
+import javax.swing.JOptionPane;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import com.Akoot.cthulhu.util.CthFile;
+import com.Akoot.util.CthFile;
 
 public class ServerTools
 {
@@ -35,6 +38,16 @@ public class ServerTools
 					catch (Exception e)
 					{
 						System.out.println("To download bukkit/spigot jars, you must run this through bash (msysgit (sorry!))");
+						try
+						{
+							if(!askYesOrNo("Download Git for Windows?")) System.exit(0);
+							FileUtils.copyURLToFile(new URL("https://github.com/git-for-windows/git/releases/download/v2.9.0.windows.1/Git-2.9.0-64-bit.exe"), new File(CWD, "Git-2.9.0-64-bit.exe"));
+							System.out.println("Successfully downloaded the installer for Git! Please install it manually");
+						}
+						catch (IOException e1)
+						{
+							e1.printStackTrace();
+						}
 						System.exit(1);
 					}
 				}
@@ -59,11 +72,7 @@ public class ServerTools
 		}
 		if(!config.startServer())
 		{
-			Scanner in  = new Scanner(System.in);
-			System.out.print("Start the server now? (yes/no): ");
-			String input = in.next();
-			in.close();
-			if(input.equalsIgnoreCase("no")) System.exit(0);
+			if(!askYesOrNo("Start server now?")) System.exit(0);
 		}
 		server.start();
 	}
@@ -86,6 +95,16 @@ public class ServerTools
 	public static void main(String[] args)
 	{
 		instance = new ServerTools(new RunConfiguration(args));
+	}
+
+	public boolean askYesOrNo(String msg)
+	{
+		Scanner in  = new Scanner(System.in);
+		System.out.print(msg + " (yes/no): ");
+		String input = in.nextLine();
+		in.close();
+		if(input.startsWith("y")) return true;
+		return false;
 	}
 
 	public static int runProcess(File workDir, String... command) throws Exception

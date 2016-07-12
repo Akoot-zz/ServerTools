@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.Akoot.cthulhu.util.CthFile;
+import com.Akoot.util.CthFile;
 
 public class Server
 {
@@ -17,6 +17,7 @@ public class Server
 	private File serverJar;
 	private CthFile serverLauncher;
 	private int minRam, maxRam;
+	private boolean closeAfterRunning;
 
 	public Server(RunConfiguration run)
 	{
@@ -57,13 +58,8 @@ public class Server
 		this.maxRam = config.getInt("maximum-ram");
 		this.serverJar = new File(serverFolder, type.value + "-" + minecraftVersion + ".jar");
 		this.serverLauncher = new CthFile(serverFolder, ServerTools.isWindows() ? "launch.bat" : "launch.sh");
-		if(!serverLauncher.exists())
-		{
-			serverLauncher.create();
-			if(ServerTools.isWindows()) serverLauncher.addLine("@echo off");
-			serverLauncher.addLine(getProgramArgsAsString());
-			if(ServerTools.isWindows()) serverLauncher.addLine("pause");
-		}
+		if(!serverLauncher.exists()) buildLauncher();
+		this.closeAfterRunning = run.closeAfterRunning;
 	}
 
 	public String getName()
@@ -111,10 +107,39 @@ public class Server
 		return config;
 	}
 
+	public boolean isBash()
+	{
+		try
+		{
+			ServerTools.runProcess(serverFolder, new String[] {"bash", "-c", "exit"});
+			return true;
+		}
+		catch (Exception e)
+		{
+			return false;
+		}
+	}
+
+	public void buildLauncher()
+	{
+		serverLauncher.create();
+		if(isBash()) serverLauncher.addLine("#Feel free to edit this generated launch file!");
+		else serverLauncher.addLine("::Feel free to edit this generated launch file!");
+		if(!isBash())
+		{
+			serverLauncher.addLine("@echo off");
+			serverLauncher.addLine("title " + displayname + "-" + minecraftVersion);
+		}	
+		String command = "java -jar -Xmx" + maxRam + "M -Xms" + minRam + "M " + serverJar.getName();
+		if(type == ServerType.VANILLA) command += " -nogui";
+		serverLauncher.addLine(command);
+		//if(!isBash()) serverLauncher.addLine("pause");
+	}
+
 	public String[] getProgramArgs()
 	{
-		if(type == ServerType.VANILLA) return new String[] {"java", "-jar", "-Xmx" + maxRam + "M", "-Xms" + minRam + "M", serverJar.getName(), "-nogui"};
-		else return new String[] {"java", "-jar", "-Xmx" + maxRam + "M", "-Xms" + minRam + "M", serverJar.getName()};
+		if(isBash()) return new String[] {"bash", serverLauncher.getAbsolutePath()};
+		else return new String[] {"cmd", "/c", "start", serverLauncher.getAbsolutePath()};
 	}
 
 	public String getProgramArgsAsString()
@@ -128,12 +153,18 @@ public class Server
 	{
 		try
 		{
-//			String[] args;
-//			if(ServerTools.isWindows()) args = new String[] {serverLauncher.getName()};
-//			else args = new String[] {"bash", "-c", serverLauncher.getName()};
-			if(ServerTools.runProcess(serverFolder, getProgramArgs()) == 0)
+			if(closeAfterRunning)
 			{
-				System.out.println("Looks like everything ran smoothly!");
+				ServerTools.runProcess(serverFolder, getProgramArgs());
+				System.exit(0);
+			}
+			else
+			{
+				if(ServerTools.runProcess(serverFolder, getProgramArgs()) == 0)
+				{
+					System.out.println("Looks like everything ran smoothly!");
+					System.exit(0);
+				}
 			}
 		}
 		catch (Exception e)

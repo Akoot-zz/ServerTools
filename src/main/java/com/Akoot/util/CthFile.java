@@ -1,4 +1,4 @@
-package com.Akoot.cthulhu.util;
+package com.Akoot.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;

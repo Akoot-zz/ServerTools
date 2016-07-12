@@ -7,6 +7,7 @@ public class RunConfiguration
 	private String serverType;
 	private int minRam, maxRam;
 	private boolean start;
+	public boolean closeAfterRunning;
 
 	public RunConfiguration(String[] args)
 	{
@@ -18,7 +19,8 @@ public class RunConfiguration
 
 		for(int i = 0; i < args.length; i++)
 		{
-			if(args[i].equalsIgnoreCase("-start")) start= true;
+			if(args[i].equalsIgnoreCase("-start")) start = true;
+			if(args[i].equalsIgnoreCase("-closeAfter")) closeAfterRunning = true;
 			if(i + 1 < args.length)
 			{
 				if(args[i].equalsIgnoreCase("-name")) name = args[i + 1];
