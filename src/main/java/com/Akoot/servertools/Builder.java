@@ -13,29 +13,50 @@ public class Builder
 	private File workDirectory;
 	private File jarsDirectory;
 	private File buildToolsDirectory;
-	
+
 	public Builder(ServerType type, String minecraftVersion)
 	{
 		this.type = type;
 		this.minecraftVersion = minecraftVersion;
-		this.workDirectory = new File(ServerTools.CWD, ".work");
+		this.workDirectory = new File(".work");
 		this.buildToolsDirectory = new File(workDirectory, "BuildTools");
 		this.jarsDirectory = new File(workDirectory, "jars");
 		if(!jarsDirectory.exists()) jarsDirectory.mkdirs();
-		if(!buildToolsDirectory.exists()) buildToolsDirectory.mkdirs();
+		if(type != ServerType.VANILLA) if(!buildToolsDirectory.exists()) buildToolsDirectory.mkdirs();
 	}
-	
+
 	private void setupBukkit()
 	{
 		try
 		{
-			URL downloadURL = new URL("https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar");
-			FileUtils.copyURLToFile(downloadURL, new File(buildToolsDirectory, "BuildTools.jar"));
-			if(ServerTools.runProcess(buildToolsDirectory, new String[] { "java", "-jar", "BuildTools.jar", "--rev", minecraftVersion }) == 0)
+			File buildTools = new File(buildToolsDirectory, "BuildTools.jar");
+			if(!buildTools.exists())
 			{
-				System.out.println("Moving source jars...");
-				FileUtils.moveFileToDirectory(new File(buildToolsDirectory, "craftbukkit-" + minecraftVersion + ".jar"), jarsDirectory, true);
-				FileUtils.moveFileToDirectory(new File(buildToolsDirectory, "spigot-" + minecraftVersion + ".jar"), jarsDirectory, true);
+				URL downloadURL = new URL("https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar");
+				FileUtils.copyURLToFile(downloadURL, buildTools);
+			}
+			//			CthFile buildToolsLauncher = new CthFile(buildToolsDirectory, "BuildTools.sh");
+			//			buildToolsLauncher.create();
+			//			buildToolsLauncher.addLine("java -jar BuildTools.jar --rev " + minecraftVersion);
+			try
+			{
+				if(ServerTools.runProcess(buildToolsDirectory, new String[] {"java", "-jar", buildTools.getName()}) == 0)
+				{
+					System.out.println("BuildTools has finished building " + getJar().getName());
+					File craftbukkit = new File(buildToolsDirectory, "craftbukkit-" + minecraftVersion + ".jar");
+					File spigot = new File(buildToolsDirectory, "spigot-" + minecraftVersion + ".jar");
+					System.out.println("Moving source jars...");
+					if(craftbukkit.exists()) FileUtils.moveFileToDirectory(craftbukkit, jarsDirectory, true);
+					if(spigot.exists()) FileUtils.moveFileToDirectory(spigot, jarsDirectory, true);
+					System.out.println("Cleaning up...");
+					for(File file: buildToolsDirectory.listFiles()) file.delete();
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("There was an error with BuildTools.jar, exiting...");
+				e.printStackTrace();
+				System.exit(1);
 			}
 		}
 		catch (Exception e)
@@ -43,7 +64,7 @@ public class Builder
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void setupVanilla()
 	{
 		try
@@ -56,20 +77,20 @@ public class Builder
 			e.printStackTrace();
 		}
 	}
-	
+
 	public File getJar()
 	{
 		return new File(jarsDirectory, type.value + "-" + minecraftVersion + ".jar");
 	}
-	
+
 	public void buildServer()
 	{
 		if(type == ServerType.SPIGOT || type == ServerType.BUKKIT) setupBukkit();
 		else setupVanilla();
 	}
-	
+
 	public void buildPlugins()
 	{
-		
+
 	}
 }
