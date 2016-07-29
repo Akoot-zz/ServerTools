@@ -15,13 +15,13 @@ public class Server
 	private File serverFolder, worldsFolder, pluginsFolder;
 	private CthFile config;
 	private File serverJar;
-	private CthFile serverLauncher;
 	private int minRam, maxRam;
 	private String worldName;
 	private int maxPlayers;
 	private boolean onlineMode;
 	private String ip;
 	private CthFile eula;
+	private List<String> launchArgs;
 
 	public Server(RunConfiguration run)
 	{
@@ -39,7 +39,7 @@ public class Server
 			config.addComment("Change the directories in which worlds and plugins will be saved and read from");
 			config.addComment("(Some plugins don't like this, Use this at your own risk!)");
 			config.set("plugins-directory", "plugins");
-			config.set("worlds-directory", ".");
+			config.set("worlds-directory", "");
 			config.addLine("");
 			config.addComment("Change the name of the default world (default is \"world\")");
 			config.set("world-name", run.worldName);
@@ -70,10 +70,10 @@ public class Server
 		this.onlineMode = config.getBoolean("online-mode");
 		this.ip = config.getString("ip");
 		this.serverJar = new File(serverFolder, type.value + "-" + minecraftVersion + ".jar");
-		this.serverLauncher = new CthFile(serverFolder, ServerTools.isBash ? "launch.bat" : "launch.sh");
-		buildLauncher();
 		this.eula = new CthFile(this.serverFolder, "eula.txt");
 		if(!eula.exists()) eula.addLine("eula=true");
+		this.launchArgs = new ArrayList<String>();
+		setLaunchArgs();
 	}
 
 	public String getName()
@@ -121,42 +121,31 @@ public class Server
 		return config;
 	}
 
-	public void buildLauncher()
+	public void setLaunchArgs()
 	{
-		serverLauncher.delete();
-		serverLauncher.create();
-
-		if(ServerTools.isBash) serverLauncher.addLine("#Feel free to edit this generated launch file!");
-		else serverLauncher.addLine("::Feel free to edit this generated launch file!");
-
-		if(ServerTools.isBash)
-		{
-			serverLauncher.addLine("@echo off");
-			serverLauncher.addLine("title " + displayname + "-" + minecraftVersion);
-		}
-
-		String command = "java -jar -Xmx" + maxRam + "M -Xms" + minRam + "M " + serverJar.getName();
-		if(type == ServerType.VANILLA) command += " nogui";
+		launchArgs.add("java");
+		launchArgs.add("-Xmx" + maxRam + "M");
+		launchArgs.add("-Xms" + minRam + "M");
+		launchArgs.add("-jar");
+		launchArgs.add(serverJar.getName());
+		
+		launchArgs.add("-W " + this.worldsFolder.getAbsolutePath());
+		launchArgs.add("-w " + this.worldName);
+		launchArgs.add("-s " + this.maxPlayers);
+		launchArgs.add("-o " + this.onlineMode);
+		//if(!this.ip.contains("localhost")) launchArgs.add("-host " + (this.ip.contains(":") ? this.ip.substring(0, this.ip.indexOf(":")) : this.ip));
+		launchArgs.add("-p " + (this.ip.contains(":") ? this.ip.substring(ip.indexOf(":") + 1) : 25565));
+		
+		if(type == ServerType.VANILLA) launchArgs.add("nogui");
 		else
 		{
-			command += "--plugins " + this.pluginsFolder;
-			command += "--universe " + this.worldsFolder;
-			command += "--world " + this.worldName;
-			command += "--size " + this.maxPlayers;
-			command += "--online-mode " + this.onlineMode;
-			command += "--host " + this.ip;
-			command += "--port " + (this.ip.contains(":") ? this.ip.substring(ip.indexOf(":")) : 25565);
+			launchArgs.add("-P " + this.pluginsFolder.getAbsolutePath());
 		}
-
-		serverLauncher.addLine(command);
 	}
 
 	public String[] getProgramArgs()
 	{
-		//if(ServerTools.isBash) return new String[] {serverLauncher.getName()};
-		//else return new String[] {"cmd", "/c", "start", serverLauncher.getName()};
-		if(this.type != ServerType.VANILLA) return new String[] {"java", "-jar", serverJar.getName()};
-		else return new String[] {"java", "-jar", serverJar.getName(), "nogui"};
+		return launchArgs.toArray(new String[launchArgs.size()]);
 	}
 
 	public String getProgramArgsAsString()

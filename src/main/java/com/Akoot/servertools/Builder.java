@@ -42,14 +42,18 @@ public class Builder
 			{
 				if(ServerTools.runProcess(buildToolsDirectory, new String[] {"java", "-jar", buildTools.getName()}) == 0)
 				{
-					System.out.println("BuildTools has finished building " + getJar().getName());
+					System.out.println("BuildTools has finished building " + getJar().getName() + "!");
 					File craftbukkit = new File(buildToolsDirectory, "craftbukkit-" + minecraftVersion + ".jar");
 					File spigot = new File(buildToolsDirectory, "spigot-" + minecraftVersion + ".jar");
 					System.out.println("Moving source jars...");
 					if(craftbukkit.exists()) FileUtils.moveFileToDirectory(craftbukkit, jarsDirectory, true);
 					if(spigot.exists()) FileUtils.moveFileToDirectory(spigot, jarsDirectory, true);
 					System.out.println("Cleaning up...");
-					for(File file: buildToolsDirectory.listFiles()) file.delete();
+					for(File file: buildToolsDirectory.listFiles())
+					{
+						if(file.delete()) System.out.println("Deleting " + file + "...");
+						else System.out.println("Could not delete " + file + "...");
+					}
 				}
 			}
 			catch(Exception e)
