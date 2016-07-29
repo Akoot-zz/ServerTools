@@ -1,13 +1,17 @@
-# gradle
-/build/
-/.gradle/
+# Java class files
+*.class
 
-# eclipse
-/bin/
-/.settings/
-/.classpath
-/.project
+# Eclipse project files
+.classpath
+.project
+
+#Gradle
+.gradletasknamecache
+.gradle/
+build/
+bin/
 
 # custom
-/run/
+run/
 *.sh
+*.class
